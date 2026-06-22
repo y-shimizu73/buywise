@@ -26,6 +26,8 @@ export interface OwnedItem {
   description: string | null;
   satisfaction: number | null;
   purchase_date: string | null;
+  image_url: string | null;
+  image_display_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -79,6 +81,7 @@ export interface OwnedItemFormData {
   description?: string;
   satisfaction?: number;
   purchase_date?: string;
+  removeImage?: boolean;
 }
 
 export interface ConsideringItemFormData {

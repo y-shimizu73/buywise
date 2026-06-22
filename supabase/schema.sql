@@ -36,6 +36,7 @@ CREATE TABLE owned_items (
   description TEXT,
   satisfaction INTEGER CHECK (satisfaction >= 1 AND satisfaction <= 5),
   purchase_date DATE,
+  image_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
@@ -140,3 +141,39 @@ CREATE TRIGGER considering_items_updated_at
 CREATE TRIGGER profiles_updated_at
   BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('owned-item-images', 'owned-item-images', false)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Users can upload own item images"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'owned-item-images'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "Users can view own item images"
+  ON storage.objects FOR SELECT
+  TO authenticated
+  USING (
+    bucket_id = 'owned-item-images'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "Users can update own item images"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (
+    bucket_id = 'owned-item-images'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "Users can delete own item images"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (
+    bucket_id = 'owned-item-images'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );

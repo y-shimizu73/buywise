@@ -3,6 +3,7 @@ import {
   SchemaType,
   type ResponseSchema,
 } from "@google/generative-ai";
+import type { OwnedItemInlineImage } from "@/lib/supabase/owned-item-images";
 import type { ConsideringItem, DiagnosisResult, OwnedItem } from "@/types";
 import { CATEGORY_MAP } from "@/lib/constants";
 
@@ -59,12 +60,20 @@ function buildDiagnosisPrompt(
   consideringItem: ConsideringItem,
   ownedItems: OwnedItem[],
 ): string {
+  let imageCounter = 0;
   const ownedList = ownedItems
-    .map(
-      (item) =>
-        `- ${item.name}（${CATEGORY_MAP[item.category].label}${item.brand ? ` / ${item.brand}` : ""}）満足度: ${item.satisfaction ?? "未評価"}/5${item.description ? ` — ${item.description}` : ""}`,
-    )
+    .map((item) => {
+      const imageNote = item.image_url
+        ? ` / 写真: 画像${(imageCounter += 1)}`
+        : "";
+      return `- ${item.name}（${CATEGORY_MAP[item.category].label}${item.brand ? ` / ${item.brand}` : ""}${imageNote}）満足度: ${item.satisfaction ?? "未評価"}/5${item.description ? ` — ${item.description}` : ""}`;
+    })
     .join("\n");
+
+  const imageSection =
+    imageCounter > 0
+      ? `\n## 所有物の写真\n添付画像は上記所有物の写真です。色・素材・デザイン・サイズ感・スタイルの重複を視覚的に分析し、診断に反映してください。\n`
+      : "";
 
   return `あなたは購入アドバイザーAIです。ユーザーが検討中の商品について、所有物との相性・重複・満足度予測を診断してください。
 
@@ -77,8 +86,7 @@ function buildDiagnosisPrompt(
 - 購入理由: ${consideringItem.purchase_reason ?? "なし"}
 
 ## 所有物一覧
-${ownedList || "（所有物なし）"}
-
+${ownedList || "（所有物なし）"}${imageSection}
 診断は具体的かつ実用的に行い、所有物との関係を踏まえた根拠を示してください。`;
 }
 
@@ -103,6 +111,7 @@ function validateDiagnosisResult(data: DiagnosisResult): DiagnosisResult {
 export async function runDiagnosis(
   consideringItem: ConsideringItem,
   ownedItems: OwnedItem[],
+  ownedItemImages: OwnedItemInlineImage[] = [],
 ): Promise<DiagnosisResult> {
   const genAI = getGeminiClient();
   const model = genAI.getGenerativeModel({
@@ -114,9 +123,14 @@ export async function runDiagnosis(
     },
   });
 
-  const result = await model.generateContent(
-    buildDiagnosisPrompt(consideringItem, ownedItems),
-  );
+  const prompt = buildDiagnosisPrompt(consideringItem, ownedItems);
+
+  const contentParts: Array<string | OwnedItemInlineImage> = [
+    prompt,
+    ...ownedItemImages,
+  ];
+
+  const result = await model.generateContent(contentParts);
 
   const content = result.response.text();
   if (!content) {

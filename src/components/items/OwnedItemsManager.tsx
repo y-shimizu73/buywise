@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { OwnedItem, OwnedItemFormData } from "@/types";
+import type { OwnedItem } from "@/types";
 import {
   createOwnedItem,
   updateOwnedItem,
@@ -29,14 +29,14 @@ export function OwnedItemsManager({ initialItems }: OwnedItemsManagerProps) {
   const filteredItems =
     filter === "all" ? items : items.filter((i) => i.category === filter);
 
-  const handleCreate = async (data: OwnedItemFormData) => {
+  const handleCreate = async (data: FormData) => {
     await createOwnedItem(data);
     startTransition(() => {
       window.location.reload();
     });
   };
 
-  const handleUpdate = async (data: OwnedItemFormData) => {
+  const handleUpdate = async (data: FormData) => {
     if (!editingItem) return;
     await updateOwnedItem(editingItem.id, data);
     startTransition(() => {
@@ -92,21 +92,7 @@ export function OwnedItemsManager({ initialItems }: OwnedItemsManagerProps) {
         </Card>
       )}
 
-      {filteredItems.length === 0 ? (
-        <EmptyState
-          icon={<Package className="h-8 w-8 text-slate-400" />}
-          title="所有物がありません"
-          description="所有しているアイテムを登録して、AI診断の精度を高めましょう"
-          action={
-            !showForm && (
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4" />
-                最初のアイテムを登録
-              </Button>
-            )
-          }
-        />
-      ) : (
+      {filteredItems.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {filteredItems.map((item) => (
             <ItemCard
@@ -121,7 +107,19 @@ export function OwnedItemsManager({ initialItems }: OwnedItemsManagerProps) {
             />
           ))}
         </div>
-      )}
+      ) : !showForm && !editingItem ? (
+        <EmptyState
+          icon={<Package className="h-8 w-8 text-slate-400" />}
+          title="所有物がありません"
+          description="所有しているアイテムを登録して、AI診断の精度を高めましょう"
+          action={
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4" />
+              最初のアイテムを登録
+            </Button>
+          }
+        />
+      ) : null}
     </div>
   );
 }

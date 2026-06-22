@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ensureCurrentUserProfile } from "@/lib/supabase/ensure-profile";
 import { runDiagnosis } from "@/lib/gemini";
+import { downloadOwnedItemImagesForAi } from "@/lib/supabase/owned-item-images";
 import type {
   ConsideringItemFormData,
   Diagnosis,
@@ -133,7 +134,18 @@ export async function runAiDiagnosis(consideringItemId: string) {
 
   if (ownedError) throw new Error(ownedError.message);
 
-  const result = await runDiagnosis(consideringItem, ownedItems ?? []);
+  const ownedItemImagePaths = (ownedItems ?? [])
+    .map((item) => item.image_url)
+    .filter((path): path is string => Boolean(path));
+  const ownedItemImages = await downloadOwnedItemImagesForAi(
+    ownedItemImagePaths,
+  );
+
+  const result = await runDiagnosis(
+    consideringItem,
+    ownedItems ?? [],
+    ownedItemImages,
+  );
 
   const { data: diagnosis, error: diagnosisError } = await supabase
     .from("diagnoses")

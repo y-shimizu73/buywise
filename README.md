@@ -39,9 +39,10 @@ cp .env.local.example .env.local
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成
 2. SQL Editor で `supabase/schema.sql` を実行
-3. Authentication > Providers で **Google** を有効化
-4. Google Cloud Console で OAuth 2.0 クライアント ID を作成し、Supabase に設定
-5. Redirect URL: `http://localhost:3000/auth/callback`
+3. 既存DBを使っている場合は `supabase/migrations/20250620_owned_item_images.sql` も実行
+4. Authentication > Providers で **Google** を有効化
+5. Google Cloud Console で OAuth 2.0 クライアント ID を作成し、Supabase に設定
+6. Redirect URL: `http://localhost:3000/auth/callback`
 
 ### 4. Gemini API セットアップ
 

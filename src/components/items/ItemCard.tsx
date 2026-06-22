@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { CATEGORY_MAP } from "@/lib/constants";
 import type { ConsideringItem, OwnedItem } from "@/types";
 import { Badge } from "@/components/ui/Badge";
@@ -16,14 +17,28 @@ export function ItemCard({ item, type, onEdit, onDelete }: ItemCardProps) {
   const ownedItem = type === "owned" ? (item as OwnedItem) : null;
   const consideringItem =
     type === "considering" ? (item as ConsideringItem) : null;
+  const imageUrl = ownedItem?.image_display_url ?? null;
 
   return (
     <Card padding="sm" className="hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">
-            {category.icon}
-          </div>
+          {imageUrl ? (
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+              <Image
+                src={imageUrl}
+                alt={`${item.name}の写真`}
+                fill
+                className="object-cover"
+                sizes="44px"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">
+              {category.icon}
+            </div>
+          )}
           <div className="min-w-0">
             <h3 className="font-semibold text-slate-900 truncate">
               {item.name}
