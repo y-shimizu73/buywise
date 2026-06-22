@@ -94,3 +94,14 @@ supabase/
 | `/considering` | 検討中商品 |
 | `/review` | AI 診断 |
 | `/history` | 診断履歴 |
+
+## Architecture
+
+```
+Next.js (App Router)
+  ├── Supabase Auth      … Google ログイン
+  ├── Supabase PostgreSQL … データ保存 + RLS
+  └── Gemini 3.5 Flash   … AI 診断（Server Actions）
+```
+
+認証・データベースは **Supabase** に集約し、行単位のアクセス制御は PostgreSQL RLS で実装しています。
