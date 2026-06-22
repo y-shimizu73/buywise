@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import type { CategoryType, OwnedItem } from "@/types";
+import { extractOwnedItemFromPhoto } from "@/actions/items";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { CategorySelect } from "@/components/items/CategorySelect";
 import { MAX_OWNED_ITEM_IMAGE_BYTES } from "@/lib/owned-item-image-constants";
+import { Sparkles } from "lucide-react";
 
 interface OwnedItemFormProps {
   initialData?: OwnedItem;
@@ -20,6 +22,7 @@ export function OwnedItemForm({
   onCancel,
 }: OwnedItemFormProps) {
   const [loading, setLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [name, setName] = useState(initialData?.name ?? "");
   const [category, setCategory] = useState<CategoryType | "">(
     initialData?.category ?? "",
@@ -38,6 +41,11 @@ export function OwnedItemForm({
     initialData?.image_display_url ?? null,
   );
   const [imageError, setImageError] = useState<string | null>(null);
+  const [extractMessage, setExtractMessage] = useState<string | null>(null);
+
+  const canExtractFromPhoto =
+    Boolean(imageFile) ||
+    Boolean(initialData?.image_url && !removeImage && !imageFile);
 
   useEffect(() => {
     if (!imageFile) return;
@@ -50,6 +58,7 @@ export function OwnedItemForm({
 
   const handleImageChange = (file: File | null) => {
     setImageError(null);
+    setExtractMessage(null);
 
     if (!file) {
       setImageFile(null);
@@ -69,6 +78,38 @@ export function OwnedItemForm({
 
     setImageFile(file);
     setRemoveImage(false);
+  };
+
+  const handleExtractFromPhoto = async () => {
+    if (!canExtractFromPhoto) return;
+
+    setExtracting(true);
+    setImageError(null);
+    setExtractMessage(null);
+
+    try {
+      const formData = new FormData();
+      if (imageFile) {
+        formData.set("image", imageFile);
+      } else if (initialData?.id) {
+        formData.set("itemId", initialData.id);
+      }
+
+      const result = await extractOwnedItemFromPhoto(formData);
+      setName(result.name);
+      setCategory(result.category);
+      setBrand(result.brand ?? "");
+      setDescription(result.description);
+      setExtractMessage("AIの推測を入力しました。内容を確認してから登録してください。");
+    } catch (error) {
+      setImageError(
+        error instanceof Error
+          ? error.message
+          : "写真から情報を取得できませんでした",
+      );
+    } finally {
+      setExtracting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,6 +140,62 @@ export function OwnedItemForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">写真</label>
+        {previewUrl && !removeImage && (
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt={`${name || "所有物"}の写真`}
+              className="h-40 w-full object-cover"
+            />
+          </div>
+        )}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => handleImageChange(e.target.files?.[0] ?? null)}
+          className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
+        />
+        <p className="text-xs text-slate-500">
+          写真を選んでから自動入力できます（JPEG / PNG / WebP、4MB以下）
+        </p>
+        {canExtractFromPhoto && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            loading={extracting}
+            onClick={handleExtractFromPhoto}
+          >
+            <Sparkles className="h-4 w-4" />
+            写真から情報を取得
+          </Button>
+        )}
+        {extractMessage && (
+          <p className="text-xs text-emerald-600">{extractMessage}</p>
+        )}
+        {imageError && <p className="text-xs text-rose-600">{imageError}</p>}
+        {initialData?.image_url && !imageFile && (
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={removeImage}
+              onChange={(e) => {
+                setRemoveImage(e.target.checked);
+                setExtractMessage(null);
+                if (e.target.checked) {
+                  setPreviewUrl(null);
+                } else {
+                  setPreviewUrl(initialData.image_display_url ?? null);
+                }
+              }}
+            />
+            現在の写真を削除する
+          </label>
+        )}
+      </div>
       <Input
         label="アイテム名"
         value={name}
@@ -124,46 +221,6 @@ export function OwnedItemForm({
         rows={3}
         placeholder="色、素材、使用感など"
       />
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-slate-700">写真</label>
-        {previewUrl && !removeImage && (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewUrl}
-              alt={`${name || "所有物"}の写真`}
-              className="h-40 w-full object-cover"
-            />
-          </div>
-        )}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => handleImageChange(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
-        />
-        <p className="text-xs text-slate-500">
-          AI診断で色・デザイン・サイズ感を分析します（JPEG / PNG / WebP、4MB以下）
-        </p>
-        {imageError && <p className="text-xs text-rose-600">{imageError}</p>}
-        {initialData?.image_url && !imageFile && (
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={removeImage}
-              onChange={(e) => {
-                setRemoveImage(e.target.checked);
-                if (e.target.checked) {
-                  setPreviewUrl(null);
-                } else {
-                  setPreviewUrl(initialData.image_display_url ?? null);
-                }
-              }}
-            />
-            現在の写真を削除する
-          </label>
-        )}
-      </div>
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="満足度 (1-5)"

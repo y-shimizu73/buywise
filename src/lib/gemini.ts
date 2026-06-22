@@ -4,8 +4,13 @@ import {
   type ResponseSchema,
 } from "@google/generative-ai";
 import type { OwnedItemInlineImage } from "@/lib/supabase/owned-item-images";
-import type { ConsideringItem, DiagnosisResult, OwnedItem } from "@/types";
-import { CATEGORY_MAP } from "@/lib/constants";
+import type {
+  ConsideringItem,
+  DiagnosisResult,
+  OwnedItem,
+  OwnedItemExtractionResult,
+} from "@/types";
+import { CATEGORIES, CATEGORY_MAP } from "@/lib/constants";
 
 const GEMINI_MODEL = "gemini-3.5-flash";
 
@@ -47,6 +52,32 @@ const DIAGNOSIS_SCHEMA: ResponseSchema = {
     "verdict",
   ],
 };
+
+const OWNED_ITEM_EXTRACTION_SCHEMA: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    name: {
+      type: SchemaType.STRING,
+      description: "アイテム名（日本語、具体的に）",
+    },
+    category: {
+      type: SchemaType.STRING,
+      format: "enum",
+      enum: ["wallet", "bag", "clothes", "gadget", "car"],
+    },
+    brand: {
+      type: SchemaType.STRING,
+      description: "ブランド名。不明なら空文字",
+    },
+    description: {
+      type: SchemaType.STRING,
+      description: "色・素材・デザイン・特徴などの説明（日本語）",
+    },
+  },
+  required: ["name", "category", "brand", "description"],
+};
+
+const CATEGORY_IDS = CATEGORIES.map((category) => category.id);
 
 function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -106,6 +137,62 @@ function validateDiagnosisResult(data: DiagnosisResult): DiagnosisResult {
   }
 
   return data;
+}
+
+function validateOwnedItemExtractionResult(
+  data: OwnedItemExtractionResult,
+): OwnedItemExtractionResult {
+  if (!data.name.trim()) {
+    throw new Error("写真からアイテム名を取得できませんでした");
+  }
+
+  if (!CATEGORY_IDS.includes(data.category)) {
+    throw new Error("写真からカテゴリを判定できませんでした");
+  }
+
+  return {
+    name: data.name.trim(),
+    category: data.category,
+    brand: data.brand?.trim() ? data.brand.trim() : null,
+    description: data.description.trim(),
+  };
+}
+
+export async function extractOwnedItemFromImage(
+  image: OwnedItemInlineImage,
+): Promise<OwnedItemExtractionResult> {
+  const genAI = getGeminiClient();
+  const model = genAI.getGenerativeModel({
+    model: GEMINI_MODEL,
+    generationConfig: {
+      temperature: 0.2,
+      responseMimeType: "application/json",
+      responseSchema: OWNED_ITEM_EXTRACTION_SCHEMA,
+    },
+  });
+
+  const categoryOptions = CATEGORIES.map(
+    (category) => `${category.id}: ${category.label}`,
+  ).join(", ");
+
+  const prompt = `添付画像はユーザーが所有している商品の写真です。画像から以下の情報を推測して返してください。
+- name: 商品の一般的な名称（日本語）
+- category: 次のいずれか1つ (${categoryOptions})
+- brand: ロゴやタグから判別できるブランド名。不明なら空文字
+- description: 色、素材、デザイン、サイズ感など視覚的に分かる特徴（日本語、2-3文）
+
+推測が難しい項目は無理に埋めず、description には確実に見える情報だけを書いてください。`;
+
+  const result = await model.generateContent([prompt, image]);
+  const content = result.response.text();
+
+  if (!content) {
+    throw new Error("写真から情報を取得できませんでした");
+  }
+
+  return validateOwnedItemExtractionResult(
+    JSON.parse(content) as OwnedItemExtractionResult,
+  );
 }
 
 export async function runDiagnosis(

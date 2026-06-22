@@ -5,10 +5,18 @@ import { createClient } from "@/lib/supabase/server";
 import { ensureCurrentUserProfile } from "@/lib/supabase/ensure-profile";
 import {
   deleteOwnedItemImage,
+  downloadOwnedItemImageForAi,
+  fileToOwnedItemInlineImage,
   getOwnedItemImageSignedUrl,
   uploadOwnedItemImage,
 } from "@/lib/supabase/owned-item-images";
-import type { CategoryType, OwnedItem, OwnedItemFormData } from "@/types";
+import { extractOwnedItemFromImage } from "@/lib/gemini";
+import type {
+  CategoryType,
+  OwnedItem,
+  OwnedItemExtractionResult,
+  OwnedItemFormData,
+} from "@/types";
 
 async function attachImageDisplayUrls(items: OwnedItem[]): Promise<OwnedItem[]> {
   return Promise.all(
@@ -212,4 +220,44 @@ export async function getOwnedItemsByCategory(category?: string) {
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return attachImageDisplayUrls((data ?? []) as OwnedItem[]);
+}
+
+export async function extractOwnedItemFromPhoto(
+  formData: FormData,
+): Promise<OwnedItemExtractionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("ログインが必要です");
+
+  const imageFile = getImageFile(formData);
+  const itemId = formData.get("itemId");
+
+  let inlineImage;
+
+  if (imageFile) {
+    inlineImage = await fileToOwnedItemInlineImage(imageFile);
+  } else if (typeof itemId === "string" && itemId) {
+    const { data: item, error } = await supabase
+      .from("owned_items")
+      .select("image_url")
+      .eq("id", itemId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (error || !item?.image_url) {
+      throw new Error("写真が見つかりません");
+    }
+
+    inlineImage = await downloadOwnedItemImageForAi(item.image_url);
+    if (!inlineImage) {
+      throw new Error("写真を読み込めませんでした");
+    }
+  } else {
+    throw new Error("写真を選択してください");
+  }
+
+  return extractOwnedItemFromImage(inlineImage);
 }

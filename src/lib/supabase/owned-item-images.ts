@@ -110,3 +110,16 @@ export async function downloadOwnedItemImagesForAi(
 
   return images.filter((image): image is OwnedItemInlineImage => image !== null);
 }
+
+export async function fileToOwnedItemInlineImage(
+  file: File,
+): Promise<OwnedItemInlineImage> {
+  validateOwnedItemImage(file);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return {
+    inlineData: {
+      mimeType: file.type,
+      data: buffer.toString("base64"),
+    },
+  };
+}

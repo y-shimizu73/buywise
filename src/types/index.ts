@@ -84,6 +84,13 @@ export interface OwnedItemFormData {
   removeImage?: boolean;
 }
 
+export interface OwnedItemExtractionResult {
+  name: string;
+  category: CategoryType;
+  brand: string | null;
+  description: string;
+}
+
 export interface ConsideringItemFormData {
   name: string;
   category: CategoryType;
