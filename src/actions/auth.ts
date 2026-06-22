@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ensureCurrentUserProfile } from "@/lib/supabase/ensure-profile";
 
 export async function signInWithGoogle() {
   const supabase = await createClient();
@@ -43,6 +44,8 @@ export async function getProfile() {
   } = await supabase.auth.getUser();
 
   if (!user) return null;
+
+  await ensureCurrentUserProfile();
 
   const { data } = await supabase
     .from("profiles")

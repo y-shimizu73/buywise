@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { ensureCurrentUserProfile } from "@/lib/supabase/ensure-profile";
 import type { OwnedItemFormData, OwnedItem } from "@/types";
 
 export async function getOwnedItems() {
@@ -29,6 +30,8 @@ export async function createOwnedItem(formData: OwnedItemFormData) {
   } = await supabase.auth.getUser();
 
   if (!user) throw new Error("ログインが必要です");
+
+  await ensureCurrentUserProfile();
 
   const { error } = await supabase.from("owned_items").insert({
     user_id: user.id,

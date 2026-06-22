@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { ensureCurrentUserProfile } from "@/lib/supabase/ensure-profile";
 import { runDiagnosis } from "@/lib/gemini";
 import type {
   ConsideringItemFormData,
@@ -34,6 +35,8 @@ export async function createConsideringItem(formData: ConsideringItemFormData) {
   } = await supabase.auth.getUser();
 
   if (!user) throw new Error("ログインが必要です");
+
+  await ensureCurrentUserProfile();
 
   const { error } = await supabase.from("considering_items").insert({
     user_id: user.id,
