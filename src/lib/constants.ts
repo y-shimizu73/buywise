@@ -1,0 +1,40 @@
+import type { CategoryType } from "@/types";
+
+export const APP_NAME = "BuyWise";
+
+export const CATEGORIES: {
+  id: CategoryType;
+  label: string;
+  icon: string;
+}[] = [
+  { id: "wallet", label: "財布", icon: "👛" },
+  { id: "bag", label: "バッグ", icon: "👜" },
+  { id: "clothes", label: "服", icon: "👔" },
+  { id: "gadget", label: "ガジェット", icon: "📱" },
+  { id: "car", label: "車", icon: "🚗" },
+];
+
+export const CATEGORY_MAP = Object.fromEntries(
+  CATEGORIES.map((c) => [c.id, c]),
+) as Record<CategoryType, (typeof CATEGORIES)[number]>;
+
+export const VERDICT_LABELS: Record<
+  "buy" | "caution" | "skip",
+  { label: string; color: string; bg: string }
+> = {
+  buy: { label: "購入推奨", color: "text-emerald-700", bg: "bg-emerald-100" },
+  caution: {
+    label: "要検討",
+    color: "text-amber-700",
+    bg: "bg-amber-100",
+  },
+  skip: { label: "見送り推奨", color: "text-rose-700", bg: "bg-rose-100" },
+};
+
+export const NAV_ITEMS = [
+  { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
+  { href: "/owned", label: "Owned Items", icon: "Package" },
+  { href: "/considering", label: "Considering Items", icon: "ShoppingBag" },
+  { href: "/review", label: "AI Review", icon: "Sparkles" },
+  { href: "/history", label: "History", icon: "History" },
+] as const;
