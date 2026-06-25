@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ScoreRing } from "@/components/ui/ScoreRing";
 import { VERDICT_LABELS, CATEGORY_MAP } from "@/lib/constants";
-import { Sparkles, Star } from "lucide-react";
+import { Sparkles, Star, ExternalLink } from "lucide-react";
 
 interface ReviewPanelProps {
   items: ConsideringItem[];
@@ -65,11 +65,23 @@ export function ReviewPanel({ items, onRunDiagnosis }: ReviewPanelProps) {
                   <span className="text-2xl">
                     {CATEGORY_MAP[item.category].icon}
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-medium text-slate-900">{item.name}</p>
                     <p className="text-xs text-slate-500">
                       {CATEGORY_MAP[item.category].label}
                     </p>
+                    {item.product_url && (
+                      <a
+                        href={item.product_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        商品リンク
+                      </a>
+                    )}
                   </div>
                 </button>
               ))}

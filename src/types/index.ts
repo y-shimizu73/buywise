@@ -41,6 +41,7 @@ export interface ConsideringItem {
   description: string | null;
   price: number | null;
   purchase_reason: string | null;
+  product_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -98,4 +99,5 @@ export interface ConsideringItemFormData {
   description?: string;
   price?: number;
   purchase_reason?: string;
+  product_url?: string;
 }

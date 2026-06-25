@@ -30,6 +30,7 @@ export function ConsideringItemForm({
     description: initialData?.description ?? "",
     price: initialData?.price ? Number(initialData.price) : undefined,
     purchase_reason: initialData?.purchase_reason ?? "",
+    product_url: initialData?.product_url ?? "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +74,13 @@ export function ConsideringItemForm({
           })
         }
         placeholder="39800"
+      />
+      <Input
+        label="商品リンク"
+        type="url"
+        value={form.product_url ?? ""}
+        onChange={(e) => setForm({ ...form, product_url: e.target.value })}
+        placeholder="https://example.com/product"
       />
       <Textarea
         label="商品説明"

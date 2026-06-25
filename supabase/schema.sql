@@ -50,6 +50,7 @@ CREATE TABLE considering_items (
   description TEXT,
   price NUMERIC(12, 2),
   purchase_reason TEXT,
+  product_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );

@@ -113,6 +113,7 @@ function buildDiagnosisPrompt(
 - カテゴリ: ${CATEGORY_MAP[consideringItem.category].label}
 - ブランド: ${consideringItem.brand ?? "不明"}
 - 価格: ${consideringItem.price ? `¥${consideringItem.price.toLocaleString()}` : "不明"}
+- 商品リンク: ${consideringItem.product_url ?? "なし"}
 - 説明: ${consideringItem.description ?? "なし"}
 - 購入理由: ${consideringItem.purchase_reason ?? "なし"}
 

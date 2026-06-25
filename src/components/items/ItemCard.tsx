@@ -3,7 +3,7 @@ import { CATEGORY_MAP } from "@/lib/constants";
 import type { ConsideringItem, OwnedItem } from "@/types";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import { Star } from "lucide-react";
+import { Star, ExternalLink } from "lucide-react";
 
 interface ItemCardProps {
   item: OwnedItem | ConsideringItem;
@@ -68,6 +68,18 @@ export function ItemCard({ item, type, onEdit, onDelete }: ItemCardProps) {
               <p className="mt-2 text-sm font-medium text-indigo-600">
                 ¥{Number(consideringItem.price).toLocaleString()}
               </p>
+            )}
+            {consideringItem?.product_url && (
+              <a
+                href={consideringItem.product_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                商品ページを開く
+              </a>
             )}
           </div>
         </div>

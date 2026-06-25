@@ -11,6 +11,17 @@ import type {
   ConsideringItem,
 } from "@/types";
 
+function normalizeProductUrl(url?: string) {
+  const trimmed = url?.trim();
+  if (!trimmed) return null;
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
 export async function getConsideringItems() {
   const supabase = await createClient();
   const {
@@ -47,6 +58,7 @@ export async function createConsideringItem(formData: ConsideringItemFormData) {
     description: formData.description || null,
     price: formData.price ?? null,
     purchase_reason: formData.purchase_reason || null,
+    product_url: normalizeProductUrl(formData.product_url),
   });
 
   if (error) throw new Error(error.message);
@@ -76,6 +88,7 @@ export async function updateConsideringItem(
       description: formData.description || null,
       price: formData.price ?? null,
       purchase_reason: formData.purchase_reason || null,
+      product_url: normalizeProductUrl(formData.product_url),
     })
     .eq("id", id)
     .eq("user_id", user.id);
