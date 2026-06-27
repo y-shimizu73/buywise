@@ -1,4 +1,14 @@
-export type CategoryType = "wallet" | "bag" | "clothes" | "gadget" | "car";
+export type CategoryType =
+  | "bag"
+  | "clothes"
+  | "phone"
+  | "computer"
+  | "audio"
+  | "camera"
+  | "wearable"
+  | "game"
+  | "gadget"
+  | "car";
 
 export type Verdict = "buy" | "caution" | "skip";
 

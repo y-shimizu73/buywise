@@ -3,7 +3,18 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE category_type AS ENUM ('wallet', 'bag', 'clothes', 'gadget', 'car');
+CREATE TYPE category_type AS ENUM (
+  'bag',
+  'clothes',
+  'phone',
+  'computer',
+  'audio',
+  'camera',
+  'wearable',
+  'game',
+  'gadget',
+  'car'
+);
 
 CREATE TABLE categories (
   id category_type PRIMARY KEY,
@@ -12,10 +23,15 @@ CREATE TABLE categories (
 );
 
 INSERT INTO categories (id, label_ja, icon) VALUES
-  ('wallet', '財布', 'wallet'),
-  ('bag', 'バッグ', 'bag'),
+  ('bag', 'バッグ・財布', 'bag'),
   ('clothes', '服', 'shirt'),
-  ('gadget', 'ガジェット', 'smartphone'),
+  ('phone', 'スマホ・タブレット', 'smartphone'),
+  ('computer', 'PC・周辺機器', 'laptop'),
+  ('audio', 'オーディオ・イヤホン', 'headphones'),
+  ('camera', 'カメラ', 'camera'),
+  ('wearable', 'ウェアラブル', 'watch'),
+  ('game', 'ゲーム', 'gamepad-2'),
+  ('gadget', 'その他ガジェット', 'plug'),
   ('car', '車', 'car');
 
 CREATE TABLE profiles (
