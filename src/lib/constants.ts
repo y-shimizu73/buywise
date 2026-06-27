@@ -31,10 +31,20 @@ export const VERDICT_LABELS: Record<
   skip: { label: "見送り推奨", color: "text-rose-700", bg: "bg-rose-100" },
 };
 
+export const PRIORITY_LABELS: Record<
+  "high" | "medium" | "low",
+  { label: string; color: string; bg: string }
+> = {
+  high: { label: "優先度高", color: "text-rose-700", bg: "bg-rose-100" },
+  medium: { label: "優先度中", color: "text-amber-700", bg: "bg-amber-100" },
+  low: { label: "優先度低", color: "text-slate-700", bg: "bg-slate-100" },
+};
+
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/owned", label: "Owned Items", icon: "Package" },
   { href: "/considering", label: "Considering Items", icon: "ShoppingBag" },
+  { href: "/recommendations", label: "Recommendations", icon: "Lightbulb" },
   { href: "/review", label: "AI Review", icon: "Sparkles" },
   { href: "/history", label: "History", icon: "History" },
 ] as const;

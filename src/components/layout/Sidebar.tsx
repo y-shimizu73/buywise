@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   Sparkles,
   History,
+  Lightbulb,
 } from "lucide-react";
 import { APP_NAME, NAV_ITEMS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ const ICONS = {
   ShoppingBag,
   Sparkles,
   History,
+  Lightbulb,
 };
 
 interface SidebarProps {

@@ -33,6 +33,7 @@ export async function updateSession(request: NextRequest) {
     "/dashboard",
     "/owned",
     "/considering",
+    "/recommendations",
     "/review",
     "/history",
   ];

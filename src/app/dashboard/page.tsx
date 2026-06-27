@@ -70,6 +70,11 @@ export default async function DashboardPage() {
                 description="購入を検討している商品を登録"
               />
               <QuickAction
+                href="/recommendations"
+                title="おすすめを見る"
+                description="所有物から次に検討すべきアイテムをAIが提案"
+              />
+              <QuickAction
                 href="/review"
                 title="AI診断を実行"
                 description="相性・重複・満足度をAIが分析"

@@ -9,6 +9,9 @@ import type {
   DiagnosisResult,
   OwnedItem,
   OwnedItemExtractionResult,
+  OwnedItemRecommendationsResult,
+  OwnedItemSuggestion,
+  RecommendationPriority,
 } from "@/types";
 import { CATEGORIES, CATEGORY_MAP } from "@/lib/constants";
 
@@ -193,6 +196,158 @@ export async function extractOwnedItemFromImage(
 
   return validateOwnedItemExtractionResult(
     JSON.parse(content) as OwnedItemExtractionResult,
+  );
+}
+
+const OWNED_RECOMMENDATIONS_SCHEMA: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    summary: { type: SchemaType.STRING },
+    style_analysis: { type: SchemaType.STRING },
+    gaps: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+    },
+    suggestions: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          category: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: ["wallet", "bag", "clothes", "gadget", "car"],
+          },
+          title: { type: SchemaType.STRING },
+          reason: { type: SchemaType.STRING },
+          priority: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: ["high", "medium", "low"],
+          },
+          traits: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+          },
+        },
+        required: ["category", "title", "reason", "priority", "traits"],
+      },
+    },
+  },
+  required: ["summary", "style_analysis", "gaps", "suggestions"],
+};
+
+function buildOwnedItemsContext(ownedItems: OwnedItem[]) {
+  let imageCounter = 0;
+  const ownedList = ownedItems
+    .map((item) => {
+      const imageNote = item.image_url
+        ? ` / 写真: 画像${(imageCounter += 1)}`
+        : "";
+      return `- ${item.name}（${CATEGORY_MAP[item.category].label}${item.brand ? ` / ${item.brand}` : ""}${imageNote}）満足度: ${item.satisfaction ?? "未評価"}/5${item.description ? ` — ${item.description}` : ""}`;
+    })
+    .join("\n");
+
+  const imageSection =
+    imageCounter > 0
+      ? `\n## 所有物の写真\n添付画像は上記所有物の写真です。色・素材・デザイン・サイズ感・スタイルを視覚的に分析してください。\n`
+      : "";
+
+  return {
+    ownedList,
+    imageSection,
+    imageCount: imageCounter,
+  };
+}
+
+function buildOwnedRecommendationsPrompt(ownedItems: OwnedItem[]) {
+  const { ownedList, imageSection } = buildOwnedItemsContext(ownedItems);
+  const categoryOptions = CATEGORIES.map(
+    (category) => `${category.id}: ${category.label}`,
+  ).join(", ");
+
+  return `あなたは購入アドバイザーAIです。ユーザーの所有物を分析し、次に検討すべき購入候補を提案してください。
+
+## 所有物一覧
+${ownedList || "（所有物なし）"}${imageSection}
+## 出力方針
+- 既所有物との重複を避け、コレクションのギャップや相性を埋める提案にする
+- 具体的な商品型番や実在しない商品名は避け、探すべき特徴（色・素材・サイズ感など）を traits に書く
+- suggestions は 3〜5 件、priority は high / medium / low
+- category は次のいずれか: ${categoryOptions}
+- 満足度が低いカテゴリは優先的に改善提案してよい
+
+所有物の傾向を踏まえ、実用的な次の一手を提案してください。`;
+}
+
+function validateOwnedItemRecommendationsResult(
+  data: OwnedItemRecommendationsResult,
+): OwnedItemRecommendationsResult {
+  const priorities: RecommendationPriority[] = ["high", "medium", "low"];
+
+  if (!data.summary.trim() || !data.style_analysis.trim()) {
+    throw new Error("おすすめの結果形式が不正です");
+  }
+
+  const suggestions = data.suggestions.map((suggestion) => {
+    if (!CATEGORY_IDS.includes(suggestion.category)) {
+      throw new Error("おすすめのカテゴリ形式が不正です");
+    }
+
+    if (!priorities.includes(suggestion.priority)) {
+      throw new Error("おすすめの優先度形式が不正です");
+    }
+
+    return {
+      category: suggestion.category,
+      title: suggestion.title.trim(),
+      reason: suggestion.reason.trim(),
+      priority: suggestion.priority,
+      traits: suggestion.traits.map((trait) => trait.trim()).filter(Boolean),
+    } satisfies OwnedItemSuggestion;
+  });
+
+  if (suggestions.length === 0) {
+    throw new Error("おすすめを生成できませんでした");
+  }
+
+  return {
+    summary: data.summary.trim(),
+    style_analysis: data.style_analysis.trim(),
+    gaps: data.gaps.map((gap) => gap.trim()).filter(Boolean),
+    suggestions,
+  };
+}
+
+export async function runOwnedItemRecommendations(
+  ownedItems: OwnedItem[],
+  ownedItemImages: OwnedItemInlineImage[] = [],
+): Promise<OwnedItemRecommendationsResult> {
+  const genAI = getGeminiClient();
+  const model = genAI.getGenerativeModel({
+    model: GEMINI_MODEL,
+    generationConfig: {
+      temperature: 0.6,
+      responseMimeType: "application/json",
+      responseSchema: OWNED_RECOMMENDATIONS_SCHEMA,
+    },
+  });
+
+  const prompt = buildOwnedRecommendationsPrompt(ownedItems);
+  const contentParts: Array<string | OwnedItemInlineImage> = [
+    prompt,
+    ...ownedItemImages,
+  ];
+
+  const result = await model.generateContent(contentParts);
+  const content = result.response.text();
+
+  if (!content) {
+    throw new Error("おすすめを取得できませんでした");
+  }
+
+  return validateOwnedItemRecommendationsResult(
+    JSON.parse(content) as OwnedItemRecommendationsResult,
   );
 }
 
