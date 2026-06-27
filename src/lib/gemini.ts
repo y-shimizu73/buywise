@@ -17,6 +17,8 @@ import { CATEGORIES, CATEGORY_MAP } from "@/lib/constants";
 
 const GEMINI_MODEL = "gemini-3.5-flash";
 
+const CATEGORY_ENUM_VALUES = CATEGORIES.map((category) => category.id);
+
 const DIAGNOSIS_SCHEMA: ResponseSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -66,7 +68,7 @@ const OWNED_ITEM_EXTRACTION_SCHEMA: ResponseSchema = {
     category: {
       type: SchemaType.STRING,
       format: "enum",
-      enum: ["wallet", "bag", "clothes", "gadget", "car"],
+      enum: CATEGORY_ENUM_VALUES,
     },
     brand: {
       type: SchemaType.STRING,
@@ -216,7 +218,7 @@ const OWNED_RECOMMENDATIONS_SCHEMA: ResponseSchema = {
           category: {
             type: SchemaType.STRING,
             format: "enum",
-            enum: ["wallet", "bag", "clothes", "gadget", "car"],
+            enum: CATEGORY_ENUM_VALUES,
           },
           title: { type: SchemaType.STRING },
           reason: { type: SchemaType.STRING },

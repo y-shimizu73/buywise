@@ -7,10 +7,15 @@ export const CATEGORIES: {
   label: string;
   icon: string;
 }[] = [
-  { id: "wallet", label: "財布", icon: "👛" },
-  { id: "bag", label: "バッグ", icon: "👜" },
+  { id: "bag", label: "バッグ・財布", icon: "👜" },
   { id: "clothes", label: "服", icon: "👔" },
-  { id: "gadget", label: "ガジェット", icon: "📱" },
+  { id: "phone", label: "スマホ・タブレット", icon: "📱" },
+  { id: "computer", label: "PC・周辺機器", icon: "💻" },
+  { id: "audio", label: "オーディオ・イヤホン", icon: "🎧" },
+  { id: "camera", label: "カメラ", icon: "📷" },
+  { id: "wearable", label: "ウェアラブル", icon: "⌚" },
+  { id: "game", label: "ゲーム", icon: "🎮" },
+  { id: "gadget", label: "その他ガジェット", icon: "🔌" },
   { id: "car", label: "車", icon: "🚗" },
 ];
 
