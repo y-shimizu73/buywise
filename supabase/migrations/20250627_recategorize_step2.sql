@@ -5,7 +5,7 @@
 DELETE FROM categories;
 INSERT INTO categories (id, label_ja, icon) VALUES
   ('bag', 'バッグ・財布', 'bag'),
-  ('clothes', '服', 'shirt'),
+  ('clothes', '服・靴', 'shirt'),
   ('phone', 'スマホ・タブレット', 'smartphone'),
   ('computer', 'PC・周辺機器', 'laptop'),
   ('audio', 'オーディオ・イヤホン', 'headphones'),

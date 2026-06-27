@@ -8,7 +8,7 @@ export const CATEGORIES: {
   icon: string;
 }[] = [
   { id: "bag", label: "バッグ・財布", icon: "👜" },
-  { id: "clothes", label: "服", icon: "👔" },
+  { id: "clothes", label: "服・靴", icon: "👔" },
   { id: "phone", label: "スマホ・タブレット", icon: "📱" },
   { id: "computer", label: "PC・周辺機器", icon: "💻" },
   { id: "audio", label: "オーディオ・イヤホン", icon: "🎧" },
