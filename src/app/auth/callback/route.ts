@@ -2,10 +2,25 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser } from "@/lib/supabase/ensure-profile";
 
+function resolveOrigin(request: Request): string {
+  const url = new URL(request.url);
+  const forwardedHost = request.headers.get("x-forwarded-host");
+
+  if (forwardedHost) {
+    const protocol =
+      request.headers.get("x-forwarded-proto") ??
+      (forwardedHost.startsWith("localhost") ? "http" : "https");
+    return `${protocol}://${forwardedHost}`;
+  }
+
+  return url.origin;
+}
+
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
+  const origin = resolveOrigin(request);
 
   if (code) {
     const supabase = await createClient();

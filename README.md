@@ -106,3 +106,38 @@ Next.js (App Router)
 ```
 
 認証・データベースは **Supabase** に集約し、行単位のアクセス制御は PostgreSQL RLS で実装しています。
+
+## デプロイ (Vercel)
+
+アプリは Vercel にホストし、データは Supabase に置いたまま接続します（データ移行は不要）。
+
+### 1. リポジトリを Vercel にインポート
+
+1. [Vercel](https://vercel.com) に GitHub でログイン
+2. **Add New → Project** で本リポジトリを選択（Framework は Next.js が自動検出）
+
+### 2. 環境変数を設定
+
+Vercel の **Settings → Environment Variables** に以下を登録:
+
+| 変数名 | 値 |
+|--------|----|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase の URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `GEMINI_API_KEY` | Gemini API キー |
+| `NEXT_PUBLIC_SITE_URL` | 本番 URL（例: `https://buywise.vercel.app`） |
+
+`NEXT_PUBLIC_SITE_URL` は OAuth コールバックに使用します。未設定の場合は Vercel のドメイン (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`) に自動フォールバックしますが、独自ドメイン利用時は明示設定を推奨します。
+
+### 3. 認証 URL を本番に合わせる
+
+- **Supabase** (Authentication → URL Configuration)
+  - Site URL: `https://<本番ドメイン>`
+  - Redirect URLs に `https://<本番ドメイン>/auth/callback` を追加
+- **Google Cloud Console** (OAuth クライアント)
+  - 承認済みリダイレクト URI に `https://<プロジェクトref>.supabase.co/auth/v1/callback`
+
+### 4. DB / Storage の確認
+
+本番 Supabase に `supabase/schema.sql` と `supabase/migrations/` を適用し、`owned-item-images` バケットが存在することを確認してください。
+
