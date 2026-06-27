@@ -100,6 +100,7 @@ export interface OwnedItemSuggestion {
   reason: string;
   priority: RecommendationPriority;
   traits: string[];
+  example_products: string[];
 }
 
 export interface OwnedItemRecommendationsResult {

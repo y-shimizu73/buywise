@@ -229,8 +229,19 @@ const OWNED_RECOMMENDATIONS_SCHEMA: ResponseSchema = {
             type: SchemaType.ARRAY,
             items: { type: SchemaType.STRING },
           },
+          example_products: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+          },
         },
-        required: ["category", "title", "reason", "priority", "traits"],
+        required: [
+          "category",
+          "title",
+          "reason",
+          "priority",
+          "traits",
+          "example_products",
+        ],
       },
     },
   },
@@ -272,11 +283,13 @@ function buildOwnedRecommendationsPrompt(ownedItems: OwnedItem[]) {
 ${ownedList || "（所有物なし）"}${imageSection}
 ## 出力方針
 - 既所有物との重複を避け、コレクションのギャップや相性を埋める提案にする
-- 具体的な商品型番や実在しない商品名は避け、探すべき特徴（色・素材・サイズ感など）を traits に書く
+- traits には探すべき特徴（色・素材・サイズ感など）を書く
+- example_products には代表的な商品例を 2〜3 個、一般によく知られた製品名やブランド+製品ライン名で書く（例: "Apple AirPods Pro", "無印良品 シャツ"）。確実でない型番や年式は付けない
 - suggestions は 3〜5 件、priority は high / medium / low
 - category は次のいずれか: ${categoryOptions}
 - 満足度が低いカテゴリは優先的に改善提案してよい
 
+商品例はユーザーが検索する取っ掛かりです。実在性を断定できない場合でも、一般的な製品カテゴリ名やブランド名で構いません。
 所有物の傾向を踏まえ、実用的な次の一手を提案してください。`;
 }
 
@@ -304,6 +317,9 @@ function validateOwnedItemRecommendationsResult(
       reason: suggestion.reason.trim(),
       priority: suggestion.priority,
       traits: suggestion.traits.map((trait) => trait.trim()).filter(Boolean),
+      example_products: (suggestion.example_products ?? [])
+        .map((product) => product.trim())
+        .filter(Boolean),
     } satisfies OwnedItemSuggestion;
   });
 

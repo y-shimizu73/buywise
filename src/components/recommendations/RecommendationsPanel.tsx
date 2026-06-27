@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CATEGORY_MAP, PRIORITY_LABELS } from "@/lib/constants";
-import { Lightbulb, Package, Sparkles } from "lucide-react";
+import { Lightbulb, Package, Sparkles, Search } from "lucide-react";
 
 interface RecommendationsPanelProps {
   ownedCount: number;
@@ -167,6 +167,27 @@ function RecommendationsResult({
                     ))}
                   </div>
                 )}
+                {suggestion.example_products.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1.5 text-xs font-medium text-slate-500">
+                      商品例（クリックで検索）
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestion.example_products.map((product) => (
+                        <a
+                          key={product}
+                          href={`https://www.google.com/search?q=${encodeURIComponent(product)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-700 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                        >
+                          <Search className="h-3 w-3" />
+                          {product}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Card>
             );
           })}
@@ -175,11 +196,11 @@ function RecommendationsResult({
 
       <Card className="bg-amber-50 border-amber-100">
         <p className="text-sm text-amber-900 leading-relaxed">
-          AIの提案です。気になる項目があれば
+          商品例はAIが挙げたものです。実在・在庫・価格は未確認のため、検索リンクからご自身で確認してください。気になる項目は
           <Link href="/considering" className="font-medium underline mx-1">
             検討中リスト
           </Link>
-          に追加し、AI Review で詳しく診断してください。
+          に追加し、AI Review で詳しく診断できます。
         </p>
       </Card>
     </div>
