@@ -126,8 +126,23 @@ Vercel の **Settings → Environment Variables** に以下を登録:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
 | `GEMINI_API_KEY` | Gemini API キー |
 | `NEXT_PUBLIC_SITE_URL` | 本番 URL（例: `https://buywise.vercel.app`） |
+| `CRON_SECRET`（推奨） | keep-alive 用の共有シークレット（任意の長いランダム文字列） |
 
 `NEXT_PUBLIC_SITE_URL` は OAuth コールバックに使用します。未設定の場合は Vercel のドメイン (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`) に自動フォールバックしますが、独自ドメイン利用時は明示設定を推奨します。
+
+### Supabase の一時停止対策（keep-alive）
+
+無料枠は約7日間アクセスがないとプロジェクトが一時停止します。Vercel Cron が毎日 `/api/keep-alive` を叩き、Supabase に軽いクエリを送って停止を防ぎます。
+
+- スケジュール: 毎日 15:00 UTC（0:00 JST）
+- 設定: `vercel.json` の `crons`
+- 保護: `CRON_SECRET` を設定すると `Authorization: Bearer <CRON_SECRET>` が必須になります（Vercel Cron は自動で付与）
+
+手動確認:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://<本番ドメイン>/api/keep-alive
+```
 
 ### 3. 認証 URL を本番に合わせる
 
